@@ -1,0 +1,15 @@
+docker swarm init
+
+docker network create --driver overlay backend
+
+docker network create --driver overlay frontend
+
+docker service create --name redis-service --network frontend -d redis:alpine
+
+docker service create -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres --mount type=volume,source=db-data,target=/var/lib/postgresql/data --network backend --name db-service -d postgres:15-alpine
+
+docker service create --name vote-service --network frontend  -p 8080:80 --replicas 2 -d dockersamples/examplevotingapp_vote
+
+docker service create --name result-service --network backend  -p 8081:80 -d dockersamples/examplevotingapp_result
+
+docker service create --name worker-service --network frontend --network backend --replicas 2 -d dockersamples/examplevotingapp_worker
